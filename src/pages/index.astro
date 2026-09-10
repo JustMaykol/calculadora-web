@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import LoanForm from "../components/LoanForm";
+---
+
+<Layout title="Nuevo préstamo">
+  <div class="mx-auto max-w-2xl">
+    <h1 class="text-2xl font-bold text-slate-900">Calcula tu préstamo</h1>
+    <p class="mt-1 text-sm text-slate-600">
+      Ingresa el monto, la TEA o TCEA y el número de cuotas para generar el cronograma de pagos
+      (sistema francés, cuota fija).
+    </p>
+    <div class="mt-6">
+      <LoanForm client:load />
+    </div>
+  </div>
+</Layout>

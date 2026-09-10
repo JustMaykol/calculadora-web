@@ -1,0 +1,32 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ScheduleTable from "../../components/ScheduleTable";
+import { api, type LoanDetail } from "../../lib/api";
+
+const { id } = Astro.params;
+
+let loan: LoanDetail | null = null;
+let loadError: string | null = null;
+try {
+  loan = await api.getLoan(id as string);
+} catch (err) {
+  loadError = err instanceof Error ? err.message : "No se pudo cargar el préstamo.";
+}
+---
+
+<Layout title={loan ? loan.name : "Préstamo"}>
+  {loadError && <p class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</p>}
+
+  {loan && (
+    <div class="space-y-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">{loan.name}</h1>
+        <p class="mt-1 text-sm text-slate-600">
+          Cronograma de pagos con sistema francés (cuota fija). Puedes amortizar cualquier cuota pendiente
+          para abonar extra a capital y recalcular el resto del cronograma reduciendo el plazo.
+        </p>
+      </div>
+      <ScheduleTable client:load initialLoan={loan} />
+    </div>
+  )}
+</Layout>

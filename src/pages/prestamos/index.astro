@@ -1,0 +1,65 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { api, FREQUENCY_LABELS, formatMoney, formatPercent, type LoanSummary } from "../../lib/api";
+
+let loans: LoanSummary[] = [];
+let loadError: string | null = null;
+try {
+  loans = await api.listLoans();
+} catch (err) {
+  loadError = err instanceof Error ? err.message : "No se pudo conectar con la API.";
+}
+---
+
+<Layout title="Mis préstamos">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-slate-900">Mis préstamos</h1>
+    <a
+      href="/"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+    >
+      + Nuevo préstamo
+    </a>
+  </div>
+
+  {loadError && <p class="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</p>}
+
+  {!loadError && loans.length === 0 && (
+    <p class="mt-6 text-sm text-slate-600">Todavía no has creado ningún préstamo.</p>
+  )}
+
+  {!loadError && loans.length > 0 && (
+    <div class="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3">Nombre</th>
+            <th class="px-4 py-3 text-right">Monto</th>
+            <th class="px-4 py-3 text-right">Tasa</th>
+            <th class="px-4 py-3">Frecuencia</th>
+            <th class="px-4 py-3 text-right">Cuotas</th>
+            <th class="px-4 py-3">Creado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {loans.map((loan) => (
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-2.5">
+                <a href={`/prestamos/${loan.id}`} class="font-medium text-indigo-700 hover:underline">
+                  {loan.name}
+                </a>
+              </td>
+              <td class="px-4 py-2.5 text-right text-slate-600">S/ {formatMoney(loan.principal)}</td>
+              <td class="px-4 py-2.5 text-right text-slate-600">
+                {loan.rate_type} {formatPercent(loan.annual_rate)}
+              </td>
+              <td class="px-4 py-2.5 text-slate-600">{FREQUENCY_LABELS[loan.frequency]}</td>
+              <td class="px-4 py-2.5 text-right text-slate-600">{loan.num_installments}</td>
+              <td class="px-4 py-2.5 text-slate-600">{new Date(loan.created_at).toLocaleDateString("es-PE")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Layout>
