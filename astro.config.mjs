@@ -9,5 +9,5 @@ export default defineConfig({
   image: {
     service: passthroughImageService(),
   },
-  integrations: [react(), tailwind()],
+  integrations: [react(), tailwind({ applyBaseStyles: false })],
 });

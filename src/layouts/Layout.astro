@@ -1,8 +1,17 @@
 ---
+import "../styles/global.css";
+
 interface Props {
   title: string;
+  description?: string;
 }
-const { title } = Astro.props;
+const { title, description = "Calcula cronogramas de préstamos y amortiza cuotas al instante." } = Astro.props;
+const { pathname } = Astro.url;
+
+const nav = [
+  { href: "/", label: "Calcular" },
+  { href: "/prestamos", label: "Préstamos" },
+];
 ---
 
 <!doctype html>
@@ -10,20 +19,60 @@ const { title } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} · Calculadora de Intereses</title>
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content={description} />
+    <title>{title} · Interés</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body class="min-h-screen bg-slate-50 text-slate-900">
-    <header class="border-b border-slate-200 bg-white">
-      <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <a href="/" class="text-lg font-semibold text-slate-900">Calculadora de Intereses</a>
-        <nav class="flex gap-4 text-sm font-medium text-slate-600">
-          <a href="/" class="hover:text-slate-900">Nuevo préstamo</a>
-          <a href="/prestamos" class="hover:text-slate-900">Mis préstamos</a>
+  <body class="min-h-screen bg-paper font-sans text-ink antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10 bg-noise"></div>
+
+    <header class="sticky top-0 z-40 border-b border-line bg-paper/80 backdrop-blur-md">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+        <a href="/" class="group flex items-center gap-2.5">
+          <span
+            class="flex h-7 w-7 items-center justify-center rounded-md bg-ink text-accent transition-transform duration-300 group-hover:rotate-[20deg]"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M3 17L10 10L14 14L21 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M15 7H21V13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="font-display text-[17px] font-semibold tracking-tight">Interés</span>
+        </a>
+
+        <nav class="flex items-center gap-1 rounded-full border border-line bg-surface p-1 text-sm font-medium">
+          {nav.map((item) => {
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <a
+                href={item.href}
+                class={`rounded-full px-4 py-1.5 transition-colors ${
+                  active ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
       </div>
     </header>
-    <main class="mx-auto max-w-5xl px-4 py-8">
+
+    <main>
       <slot />
     </main>
+
+    <footer class="mt-20 border-t border-line">
+      <div class="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-8 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <p>Sistema francés de amortización · cuota fija.</p>
+        <p>Hecho para calcular, no para adivinar.</p>
+      </div>
+    </footer>
   </body>
 </html>

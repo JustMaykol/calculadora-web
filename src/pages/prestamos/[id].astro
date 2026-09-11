@@ -15,18 +15,34 @@ try {
 ---
 
 <Layout title={loan ? loan.name : "Préstamo"}>
-  {loadError && <p class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</p>}
+  <section class="mx-auto max-w-6xl px-5 pb-24 pt-14 sm:px-8 sm:pt-20">
+    <a href="/prestamos" class="inline-flex items-center gap-1.5 text-xs font-medium text-ink-faint transition-colors hover:text-ink">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M5 12L11 18M5 12L11 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Todos los préstamos
+    </a>
 
-  {loan && (
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900">{loan.name}</h1>
-        <p class="mt-1 text-sm text-slate-600">
-          Cronograma de pagos con sistema francés (cuota fija). Puedes amortizar cualquier cuota pendiente
-          para abonar extra a capital y recalcular el resto del cronograma reduciendo el plazo.
+    {loadError && (
+      <p class="mt-6 rounded-xl bg-danger-soft px-4 py-3 text-sm font-medium text-danger">{loadError}</p>
+    )}
+
+    {loan && (
+      <div class="mt-4">
+        <span class="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
+          <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+          Sistema francés · cuota fija
+        </span>
+        <h1 class="mt-4 font-display text-3xl font-semibold tracking-tightest text-ink sm:text-4xl">{loan.name}</h1>
+        <p class="mt-2 max-w-xl text-sm text-ink-soft">
+          Amortiza cualquier cuota pendiente para abonar extra a capital: el cronograma restante se recalcula
+          al instante, manteniendo la misma cuota y reduciendo el plazo.
         </p>
+
+        <div class="mt-8">
+          <ScheduleTable client:load initialLoan={loan} />
+        </div>
       </div>
-      <ScheduleTable client:load initialLoan={loan} />
-    </div>
-  )}
+    )}
+  </section>
 </Layout>

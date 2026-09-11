@@ -1,17 +1,63 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import LoanForm from "../components/LoanForm";
+
+const features = [
+  {
+    title: "TEA o TCEA, sin adivinar",
+    body: "La tasa anual se convierte a la tasa exacta por periodo según tu frecuencia de pago.",
+  },
+  {
+    title: "Cronograma cuota por cuota",
+    body: "Interés, amortización y saldo de cada pago, calculados con el sistema francés de cuota fija.",
+  },
+  {
+    title: "Amortiza y ve el impacto",
+    body: "Abona extra a cualquier cuota y el plazo restante se recalcula al instante.",
+  },
+];
 ---
 
-<Layout title="Nuevo préstamo">
-  <div class="mx-auto max-w-2xl">
-    <h1 class="text-2xl font-bold text-slate-900">Calcula tu préstamo</h1>
-    <p class="mt-1 text-sm text-slate-600">
-      Ingresa el monto, la TEA o TCEA y el número de cuotas para generar el cronograma de pagos
-      (sistema francés, cuota fija).
-    </p>
-    <div class="mt-6">
-      <LoanForm client:load />
+<Layout title="Calcular préstamo">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto grid max-w-6xl gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-10">
+      <div>
+        <span class="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
+          <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+          Calculadora de préstamos
+        </span>
+
+        <h1 class="mt-6 font-display text-4xl font-semibold leading-[1.05] tracking-tightest text-ink sm:text-5xl lg:text-[3.4rem]">
+          Tu cronograma de pagos,
+          <span class="relative inline-block whitespace-nowrap">
+            calculado al centavo
+            <svg class="absolute -bottom-1 left-0 w-full" height="10" viewBox="0 0 300 10" preserveAspectRatio="none">
+              <path d="M2 7C60 2 240 2 298 7" stroke="#D2FF4D" stroke-width="6" stroke-linecap="round" fill="none"></path>
+            </svg>
+          </span>.
+        </h1>
+
+        <p class="mt-6 max-w-md text-base leading-relaxed text-ink-soft sm:text-lg">
+          Ingresa el monto, la tasa y el número de cuotas. Obtén el detalle completo del préstamo y amortiza
+          cualquier pago para ver, al instante, cuánto plazo te ahorras.
+        </p>
+
+        <dl class="mt-12 space-y-6 border-t border-line pt-8">
+          {features.map((f, i) => (
+            <div class="flex gap-4">
+              <dt class="font-mono text-xs text-ink-faint">0{i + 1}</dt>
+              <div>
+                <dt class="font-display text-sm font-semibold text-ink">{f.title}</dt>
+                <dd class="mt-1 text-sm text-ink-soft">{f.body}</dd>
+              </div>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div class="lg:sticky lg:top-24">
+        <LoanForm client:load />
+      </div>
     </div>
-  </div>
+  </section>
 </Layout>

@@ -14,6 +14,12 @@ export default function LoanForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  function stepInstallments(delta: number) {
+    const current = Number(numInstallments) || 0;
+    const next = Math.min(600, Math.max(1, current + delta));
+    setNumInstallments(String(next));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -54,104 +60,183 @@ export default function LoanForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div>
-        <label className="block text-sm font-medium text-slate-700">Nombre del préstamo</label>
+    <form
+      onSubmit={handleSubmit}
+      className="relative rounded-3xl border border-line bg-surface p-6 shadow-[0_1px_2px_rgba(19,19,16,0.04),0_16px_40px_-24px_rgba(19,19,16,0.35)] sm:p-8"
+    >
+      <div className="mb-6 flex items-center justify-between">
+        <span className="font-display text-sm font-semibold text-ink">Nuevo préstamo</span>
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-ink-faint">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-600"></span>
+          cálculo en vivo
+        </span>
+      </div>
+
+      <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Monto del préstamo</label>
+      <div className="mt-2 flex items-baseline gap-2 border-b-2 border-line pb-2 transition-colors focus-within:border-ink">
+        <span className="font-display text-2xl font-medium text-ink-faint">S/</span>
         <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          type="number"
+          min="0"
+          step="0.01"
+          value={principal}
+          onChange={(e) => setPrincipal(e.target.value)}
+          className="w-full bg-transparent font-display text-3xl font-semibold text-ink outline-none placeholder:text-ink-faint sm:text-4xl"
+          required
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="mt-7 grid grid-cols-2 gap-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Monto (S/)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={principal}
-            onChange={(e) => setPrincipal(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Número de cuotas</label>
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={numInstallments}
-            onChange={(e) => setNumInstallments(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Tipo de tasa</label>
-          <select
-            value={rateType}
-            onChange={(e) => setRateType(e.target.value as RateType)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="TEA">TEA (Tasa Efectiva Anual)</option>
-            <option value="TCEA">TCEA (Tasa de Costo Efectivo Anual)</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Tasa anual (%)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={ratePercent}
-            onChange={(e) => setRatePercent(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Frecuencia de pago</label>
-          <select
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value as Frequency)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            {FREQUENCIES.map((f) => (
-              <option key={f} value={f}>
-                {FREQUENCY_LABELS[f]}
-              </option>
+          <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Tipo de tasa</label>
+          <div className="mt-2 grid grid-cols-2 gap-1 rounded-lg border border-line bg-paper p-1">
+            {(["TEA", "TCEA"] as RateType[]).map((rt) => (
+              <button
+                key={rt}
+                type="button"
+                onClick={() => setRateType(rt)}
+                className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
+                  rateType === rt ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                {rt}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Fecha de primer pago</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          <p className="mt-1 text-xs text-slate-500">Si se deja vacío, se usa la fecha de hoy.</p>
+          <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Tasa anual</label>
+          <div className="mt-2 flex items-baseline gap-1 border-b-2 border-line pb-1.5 transition-colors focus-within:border-ink">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={ratePercent}
+              onChange={(e) => setRatePercent(e.target.value)}
+              className="w-full bg-transparent font-display text-xl font-semibold text-ink outline-none"
+              required
+            />
+            <span className="font-display text-xl font-semibold text-ink-faint">%</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Frecuencia</label>
+          <div className="relative mt-2">
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value as Frequency)}
+              className="w-full appearance-none rounded-lg border border-line bg-paper px-3 py-2.5 text-sm font-medium text-ink outline-none transition-colors focus:border-ink"
+            >
+              {FREQUENCIES.map((f) => (
+                <option key={f} value={f}>
+                  {FREQUENCY_LABELS[f]}
+                </option>
+              ))}
+            </select>
+            <svg
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint"
+              width="12"
+              height="8"
+              viewBox="0 0 12 8"
+              fill="none"
+            >
+              <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">N° de cuotas</label>
+          <div className="mt-2 flex items-center rounded-lg border border-line bg-paper">
+            <button
+              type="button"
+              onClick={() => stepInstallments(-1)}
+              className="flex h-[42px] w-9 shrink-0 items-center justify-center text-ink-soft transition-colors hover:text-ink"
+              aria-label="Restar cuota"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={numInstallments}
+              onChange={(e) => setNumInstallments(e.target.value)}
+              className="w-full bg-transparent text-center text-sm font-semibold text-ink outline-none"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => stepInstallments(1)}
+              className="flex h-[42px] w-9 shrink-0 items-center justify-center text-ink-soft transition-colors hover:text-ink"
+              aria-label="Sumar cuota"
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <details className="mt-6 group">
+        <summary className="cursor-pointer list-none text-xs font-medium text-ink-faint transition-colors hover:text-ink-soft">
+          <span className="inline-flex items-center gap-1">
+            Opciones avanzadas
+            <svg
+              className="transition-transform group-open:rotate-180"
+              width="10"
+              height="7"
+              viewBox="0 0 12 8"
+              fill="none"
+            >
+              <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </summary>
+        <div className="mt-4 grid grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Nombre</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-sm font-medium text-ink outline-none transition-colors focus:border-ink"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Primer pago</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-sm font-medium text-ink outline-none transition-colors focus:border-ink"
+            />
+          </div>
+        </div>
+      </details>
+
+      {error && (
+        <p className="mt-5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{error}</p>
+      )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-60"
+        className="group mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 font-display text-sm font-semibold uppercase tracking-wide text-accent-ink transition-all hover:brightness-95 active:scale-[0.99] disabled:opacity-60"
       >
-        {loading ? "Calculando..." : "Calcular cronograma"}
+        {loading ? "Calculando…" : "Calcular cronograma"}
+        {!loading && (
+          <svg
+            className="transition-transform group-hover:translate-x-0.5"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
       </button>
     </form>
   );
