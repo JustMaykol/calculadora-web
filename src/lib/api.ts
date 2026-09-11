@@ -95,6 +95,8 @@ export const api = {
   getLoan: (id: string) => request<LoanDetail>(`/loans/${id}`),
   createLoan: (payload: LoanCreatePayload) =>
     request<LoanDetail>("/loans", { method: "POST", body: JSON.stringify(payload) }),
+  updateLoan: (id: string, payload: LoanCreatePayload) =>
+    request<LoanDetail>(`/loans/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   amortize: (id: string, installmentNumber: number, amount: number) =>
     request<LoanDetail>(`/loans/${id}/amortizations`, {
       method: "POST",

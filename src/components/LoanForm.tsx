@@ -1,16 +1,25 @@
 import { useState } from "react";
-import { api, FREQUENCY_LABELS, type Frequency, type RateType } from "../lib/api";
+import { api, FREQUENCY_LABELS, type Frequency, type LoanDetail, type RateType } from "../lib/api";
 
 const FREQUENCIES = Object.keys(FREQUENCY_LABELS) as Frequency[];
 
-export default function LoanForm() {
-  const [name, setName] = useState("Mi préstamo");
-  const [principal, setPrincipal] = useState("10000");
-  const [rateType, setRateType] = useState<RateType>("TEA");
-  const [ratePercent, setRatePercent] = useState("18");
-  const [frequency, setFrequency] = useState<Frequency>("MENSUAL");
-  const [numInstallments, setNumInstallments] = useState("12");
-  const [startDate, setStartDate] = useState("");
+interface Props {
+  /** When provided, the form edits this loan instead of creating a new one. */
+  loan?: LoanDetail;
+  onSaved?: (loan: LoanDetail) => void;
+  onCancel?: () => void;
+}
+
+export default function LoanForm({ loan, onSaved, onCancel }: Props) {
+  const isEdit = Boolean(loan);
+
+  const [name, setName] = useState(loan?.name ?? "Mi préstamo");
+  const [principal, setPrincipal] = useState(loan?.principal ?? "10000");
+  const [rateType, setRateType] = useState<RateType>(loan?.rate_type ?? "TEA");
+  const [ratePercent, setRatePercent] = useState(loan ? String(Number(loan.annual_rate) * 100) : "18");
+  const [frequency, setFrequency] = useState<Frequency>(loan?.frequency ?? "MENSUAL");
+  const [numInstallments, setNumInstallments] = useState(loan ? String(loan.num_installments) : "12");
+  const [startDate, setStartDate] = useState(loan?.start_date ?? "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,20 +50,37 @@ export default function LoanForm() {
       return;
     }
 
+    if (isEdit && loan!.amortizations.length > 0) {
+      const confirmed = window.confirm(
+        `Este préstamo tiene ${loan!.amortizations.length} amortización(es) aplicada(s). ` +
+          "Guardar estos cambios recalcula el cronograma desde cero y borra ese historial. ¿Continuar?",
+      );
+      if (!confirmed) return;
+    }
+
+    const payload = {
+      name: name.trim() || "Préstamo",
+      principal: principalNum,
+      annual_rate: rateNum,
+      rate_type: rateType,
+      frequency,
+      num_installments: nNum,
+      start_date: startDate || undefined,
+    };
+
     setLoading(true);
     try {
-      const loan = await api.createLoan({
-        name: name.trim() || "Préstamo",
-        principal: principalNum,
-        annual_rate: rateNum,
-        rate_type: rateType,
-        frequency,
-        num_installments: nNum,
-        start_date: startDate || undefined,
-      });
-      window.location.href = `/prestamos/${loan.id}`;
+      if (isEdit) {
+        const updated = await api.updateLoan(loan!.id, payload);
+        onSaved?.(updated);
+      } else {
+        const created = await api.createLoan(payload);
+        window.location.href = `/prestamos/${created.id}`;
+        return;
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear el préstamo.");
+      setError(err instanceof Error ? err.message : "No se pudo guardar el préstamo.");
+    } finally {
       setLoading(false);
     }
   }
@@ -65,12 +91,23 @@ export default function LoanForm() {
       className="relative rounded-3xl border border-line bg-surface p-6 shadow-[0_1px_2px_rgba(19,19,16,0.04),0_16px_40px_-24px_rgba(19,19,16,0.35)] sm:p-8"
     >
       <div className="mb-6 flex items-center justify-between">
-        <span className="font-display text-sm font-semibold text-ink">Nuevo préstamo</span>
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-ink-faint">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-600"></span>
-          cálculo en vivo
+        <span className="font-display text-sm font-semibold text-ink">
+          {isEdit ? "Editar préstamo" : "Nuevo préstamo"}
         </span>
+        {!isEdit && (
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-ink-faint">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-600"></span>
+            cálculo en vivo
+          </span>
+        )}
       </div>
+
+      {isEdit && loan!.amortizations.length > 0 && (
+        <p className="mb-6 rounded-lg bg-accent-soft px-3 py-2 text-xs font-medium text-accent-ink">
+          Este préstamo tiene {loan!.amortizations.length} amortización(es) aplicada(s). Guardar cambios
+          recalcula el cronograma desde cero y borra ese historial.
+        </p>
+      )}
 
       <label className="block text-xs font-medium uppercase tracking-wide text-ink-faint">Monto del préstamo</label>
       <div className="mt-2 flex items-baseline gap-2 border-b-2 border-line pb-2 transition-colors focus-within:border-ink">
@@ -179,7 +216,7 @@ export default function LoanForm() {
         </div>
       </div>
 
-      <details className="mt-6 group">
+      <details className="mt-6 group" open={isEdit}>
         <summary className="cursor-pointer list-none text-xs font-medium text-ink-faint transition-colors hover:text-ink-soft">
           <span className="inline-flex items-center gap-1">
             Opciones avanzadas
@@ -220,24 +257,35 @@ export default function LoanForm() {
         <p className="mt-5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{error}</p>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="group mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 font-display text-sm font-semibold uppercase tracking-wide text-accent-ink transition-all hover:brightness-95 active:scale-[0.99] disabled:opacity-60"
-      >
-        {loading ? "Calculando…" : "Calcular cronograma"}
-        {!loading && (
-          <svg
-            className="transition-transform group-hover:translate-x-0.5"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
+      <div className={`mt-7 flex gap-3 ${isEdit ? "flex-row-reverse" : ""}`}>
+        <button
+          type="submit"
+          disabled={loading}
+          className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent py-3.5 font-display text-sm font-semibold uppercase tracking-wide text-accent-ink transition-all hover:brightness-95 active:scale-[0.99] disabled:opacity-60"
+        >
+          {loading ? "Guardando…" : isEdit ? "Guardar cambios" : "Calcular cronograma"}
+          {!loading && (
+            <svg
+              className="transition-transform group-hover:translate-x-0.5"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+        {isEdit && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-line px-5 py-3.5 font-display text-sm font-semibold text-ink-soft transition-colors hover:border-ink/30 hover:text-ink"
           >
-            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+            Cancelar
+          </button>
         )}
-      </button>
+      </div>
     </form>
   );
 }

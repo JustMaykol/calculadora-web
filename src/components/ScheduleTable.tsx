@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { api, FREQUENCY_LABELS, formatMoney, formatPercent, type LoanDetail } from "../lib/api";
+import LoanForm from "./LoanForm";
 
 interface Props {
   initialLoan: LoanDetail;
@@ -7,6 +8,7 @@ interface Props {
 
 export default function ScheduleTable({ initialLoan }: Props) {
   const [loan, setLoan] = useState<LoanDetail>(initialLoan);
+  const [editing, setEditing] = useState(false);
   const [openRow, setOpenRow] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,13 +44,43 @@ export default function ScheduleTable({ initialLoan }: Props) {
     }
   }
 
+  if (editing) {
+    return (
+      <LoanForm
+        loan={loan}
+        onSaved={(updated) => {
+          setLoan(updated);
+          setEditing(false);
+        }}
+        onCancel={() => setEditing(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Hero stat */}
       <div className="rounded-3xl border border-line bg-surface p-6 sm:p-8">
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">Cuota fija actual</p>
+          <button
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[11px] font-semibold text-ink-soft transition-colors hover:border-ink/30 hover:text-ink"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Editar préstamo
+          </button>
+        </div>
+        <div className="mt-2 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">Cuota fija actual</p>
             <p className="mt-2 font-display text-5xl font-semibold tracking-tightest text-ink sm:text-6xl">
               <span className="text-2xl font-medium text-ink-faint align-top mr-1">S/</span>
               {currentPayment ? formatMoney(currentPayment) : "—"}
